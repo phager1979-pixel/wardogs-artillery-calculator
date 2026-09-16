@@ -1,0 +1,139 @@
+﻿#Requires AutoHotkey v2.0
+#SingleInstance Force
+Persistent
+
+; WARDOGS clipboard bridge
+; Watches only text explicitly copied into the Windows clipboard.
+
+SetTitleMatchMode(2)
+CoordMode("Mouse", "Screen")
+
+CalculatorPath := A_ScriptDir "\coordinate-distance-calculator.html"
+WindowTitle := "WARDOGS Artillery Map Calculator"
+LastText := ""
+LastHandledAt := 0
+MonitoringEnabled := true
+
+if !FileExist(CalculatorPath) {
+    MsgBox("Calculator not found:`n" CalculatorPath, "WARDOGS Clipboard Bridge", "Iconx")
+    ExitApp()
+}
+
+A_TrayMenu.Delete()
+A_TrayMenu.Add("Open Calculator", OpenCalculator)
+A_TrayMenu.Add("Pause Monitoring", ToggleMonitoring)
+A_TrayMenu.Add()
+A_TrayMenu.Add("Exit", (*) => ExitApp())
+A_TrayMenu.Default := "Open Calculator"
+A_TrayMenu.ClickCount := 1
+
+OnClipboardChange(ClipboardChanged)
+TrayTip("Copy a WARDOGS X/Y pair to import it automatically.", "WARDOGS Clipboard Bridge")
+
+ClipboardChanged(DataType) {
+    global MonitoringEnabled, LastText, LastHandledAt
+    if !MonitoringEnabled || DataType != 1
+        return
+
+    text := Trim(A_Clipboard)
+    if text = "" || !LooksLikeCoordinates(text)
+        return
+
+    ; Suppress accidental duplicate notifications, but allow copying the
+    ; same target again after a short delay.
+    if text = LastText && A_TickCount - LastHandledAt < 1200
+        return
+
+    LastText := text
+    LastHandledAt := A_TickCount
+    DeliverClipboardToCalculator()
+}
+
+LooksLikeCoordinates(text) {
+    if StrLen(text) > 300
+        return false
+
+    pattern := "[-+]?(?:\d+(?:[.,]\d+)?|[.,]\d+)"
+    count := 0
+    startAt := 1
+
+    while RegExMatch(text, pattern, &match, startAt) {
+        count += 1
+        startAt := match.Pos + match.Len
+        if count >= 4
+            return true
+    }
+
+    if count != 2
+        return false
+
+    ; For a two-number match, require a familiar coordinate cue to avoid
+    ; reacting to arbitrary copied prose containing two unrelated numbers.
+    hasLabel := RegExMatch(text, "i)\b(?:x|y|a|b)\b")
+    hasSeparator := InStr(text, ",") || InStr(text, "-") || InStr(text, "–") || InStr(text, "—") || InStr(text, "`n")
+    return hasLabel || hasSeparator
+}
+
+DeliverClipboardToCalculator() {
+    global WindowTitle
+    hwnd := EnsureCalculatorWindow()
+    if !hwnd {
+        TrayTip("Calculator window could not be opened.", "WARDOGS Clipboard Bridge")
+        return
+    }
+
+    WinActivate("ahk_id " hwnd)
+    if !WinWaitActive("ahk_id " hwnd, , 4) {
+        TrayTip("Calculator could not be focused.", "WARDOGS Clipboard Bridge")
+        return
+    }
+
+    ; Click the document area so Ctrl+V reaches the page even if the browser's
+    ; address bar was focused previously. Restore the pointer afterwards.
+    MouseGetPos(&oldX, &oldY)
+    try {
+        WinGetClientPos(&clientX, &clientY, &clientW, &clientH, "ahk_id " hwnd)
+        Click(clientX + Floor(clientW * 0.72), clientY + Floor(clientH * 0.55))
+        Sleep(100)
+        Send("^v")
+        Sleep(80)
+        MouseMove(oldX, oldY, 0)
+        TrayTip("Coordinates imported.", "WARDOGS Clipboard Bridge")
+    } catch Error as err {
+        MouseMove(oldX, oldY, 0)
+        TrayTip("Automatic paste failed: " err.Message, "WARDOGS Clipboard Bridge")
+    }
+}
+
+EnsureCalculatorWindow() {
+    global WindowTitle, CalculatorPath
+    if hwnd := WinExist(WindowTitle)
+        return hwnd
+
+    edgePath := A_ProgramFiles "\Microsoft\Edge\Application\msedge.exe"
+    if !FileExist(edgePath) && A_Is64bitOS
+        edgePath := A_ProgramFiles " (x86)\Microsoft\Edge\Application\msedge.exe"
+
+    if FileExist(edgePath) {
+        fileUrl := "file:///" StrReplace(CalculatorPath, "\", "/")
+        quote := Chr(34)
+        Run(quote edgePath quote " --app=" quote fileUrl quote)
+    } else {
+        Run(CalculatorPath)
+    }
+
+    return WinWait(WindowTitle, , 8)
+}
+
+OpenCalculator(*) {
+    hwnd := EnsureCalculatorWindow()
+    if hwnd
+        WinActivate("ahk_id " hwnd)
+}
+
+ToggleMonitoring(*) {
+    global MonitoringEnabled
+    MonitoringEnabled := !MonitoringEnabled
+    A_TrayMenu.Rename(MonitoringEnabled ? "Resume Monitoring" : "Pause Monitoring", MonitoringEnabled ? "Pause Monitoring" : "Resume Monitoring")
+    TrayTip(MonitoringEnabled ? "Clipboard monitoring active." : "Clipboard monitoring paused.", "WARDOGS Clipboard Bridge")
+}
