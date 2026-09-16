@@ -82,3 +82,14 @@ The tactical map is arranged at full width directly below the three primary solu
 The AutoHotkey bridge remembers the active window before importing coordinates. After the calculator receives the paste, the bridge restores that previous window after a short delay, allowing WARDOGS to remain the working foreground application. The behavior is enabled by default and can be toggled through **Return to previous window** in the tray menu.
 
 Exclusive-fullscreen games or mismatched privilege levels can prevent Windows from restoring focus. Borderless-windowed mode is recommended; the game and bridge should run at the same privilege level.
+## F8 chat-coordinate shortcut
+
+With the WARDOGS chat coordinate line active and the caret at its end, press **F8**. The bridge performs this sequence:
+
+1. Sends `Shift+Home` to select the current chat line.
+2. Sends `Ctrl+C` to copy it.
+3. The clipboard monitor recognizes and imports the coordinates.
+4. The calculator computes the solution.
+5. Focus returns automatically to WARDOGS.
+
+The hotkey is global but, by default, executes only when the active window title contains `WARDOGS`. Advanced users can change `CaptureHotkey`, `WardogsWindowTitle`, or `RestrictHotkeyToWardogs` near the top of `wardogs-clipboard-monitor.ahk`.

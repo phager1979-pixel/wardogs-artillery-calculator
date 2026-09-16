@@ -15,6 +15,9 @@ LastHandledAt := 0
 MonitoringEnabled := true
 ReturnFocusEnabled := true
 ReturnFocusDelayMs := 180
+CaptureHotkey := "F8"
+WardogsWindowTitle := "WARDOGS"
+RestrictHotkeyToWardogs := true
 
 if !FileExist(CalculatorPath) {
     MsgBox("Calculator not found:`n" CalculatorPath, "WARDOGS Clipboard Bridge", "Iconx")
@@ -23,6 +26,7 @@ if !FileExist(CalculatorPath) {
 
 A_TrayMenu.Delete()
 A_TrayMenu.Add("Open Calculator", OpenCalculator)
+A_TrayMenu.Add("Capture chat coordinates (F8)", CaptureCurrentChatLine)
 A_TrayMenu.Add("Pause Monitoring", ToggleMonitoring)
 A_TrayMenu.Add("Return to previous window", ToggleReturnFocus)
 A_TrayMenu.Check("Return to previous window")
@@ -32,7 +36,28 @@ A_TrayMenu.Default := "Open Calculator"
 A_TrayMenu.ClickCount := 1
 
 OnClipboardChange(ClipboardChanged)
+Hotkey(CaptureHotkey, CaptureCurrentChatLine)
 TrayTip("Copy a WARDOGS X/Y pair to import it automatically.", "WARDOGS Clipboard Bridge")
+
+CaptureCurrentChatLine(*) {
+    global WardogsWindowTitle, RestrictHotkeyToWardogs
+
+    activeTitle := WinGetTitle("A")
+    if RestrictHotkeyToWardogs && !InStr(StrUpper(activeTitle), StrUpper(WardogsWindowTitle)) {
+        TrayTip("F8 ignored: WARDOGS is not the active window.", "WARDOGS Clipboard Bridge")
+        return
+    }
+
+    ; Assumes the WARDOGS chat input is active and the caret is at the end
+    ; of the coordinate line created by Mark Coordinates.
+    Send("+{Home}")
+    Sleep(70)
+    A_Clipboard := ""
+    Send("^c")
+
+    if !ClipWait(1)
+        TrayTip("No chat coordinates were copied. Focus the coordinate line and try F8 again.", "WARDOGS Clipboard Bridge")
+}
 
 ClipboardChanged(DataType) {
     global MonitoringEnabled, LastText, LastHandledAt

@@ -48,3 +48,11 @@ Prüfe vor der Verwendung von Fenster- oder Clipboard-Automatisierung die jeweil
 ## Kartenmaterial
 
 Die auswählbaren WARDOGS-Kartenbilder werden zur Laufzeit von `wardogs.zone` geladen und sind nicht im Archiv enthalten. Dadurch werden keine fremden Karten-Assets weiterverteilt. Der Rechner enthält immer ein lokales taktisches Fallback-Raster.
+## F8-Kurzablauf im Spiel
+
+1. Die Funktion **Mark Coordinates** verwenden, sodass die Koordinaten in der Chatzeile stehen.
+2. Sicherstellen, dass die Chatzeile aktiv und der Cursor am Zeilenende ist.
+3. **F8** drücken.
+4. Das Skript sendet `Shift+Pos1`, danach `Strg+C`, importiert und berechnet die Koordinaten und aktiviert anschließend WARDOGS erneut.
+
+Der Hotkey wird standardmäßig nur ausgeführt, wenn der Titel des aktiven Fensters `WARDOGS` enthält. Bei abweichendem Fenstertitel kann `WardogsWindowTitle` oben im AHK-Skript angepasst werden.
