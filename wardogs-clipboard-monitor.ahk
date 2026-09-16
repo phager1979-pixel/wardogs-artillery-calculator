@@ -16,10 +16,19 @@ MonitoringEnabled := true
 ReturnFocusEnabled := true
 ReturnFocusDelayMs := 180
 TargetHotkey := "F8"
-FiringHotkey := "^F8"
+FiringHotkey := "F7"
+LogPath := A_ScriptDir "\wardogs-clipboard-monitor.log"
 WardogsWindowTitle := "WARDOGS"
 RestrictHotkeyToWardogs := false
 HotkeyCaptureActive := false
+
+WriteLog(message) {
+    global LogPath
+    try FileAppend(FormatTime(, "yyyy-MM-dd HH:mm:ss") " | " message "`n", LogPath, "UTF-8")
+}
+
+try FileDelete(LogPath)
+WriteLog("Clipboard bridge started. F7=firing, F8=target")
 
 if !FileExist(CalculatorPath) {
     MsgBox("Calculator not found:`n" CalculatorPath, "WARDOGS Clipboard Bridge", "Iconx")
@@ -29,7 +38,7 @@ if !FileExist(CalculatorPath) {
 A_TrayMenu.Delete()
 A_TrayMenu.Add("Open Calculator", OpenCalculator)
 A_TrayMenu.Add("Capture target (F8)", CaptureTargetCoordinates)
-A_TrayMenu.Add("Capture firing position (Ctrl+F8)", CaptureFiringCoordinates)
+A_TrayMenu.Add("Capture firing position (F7)", CaptureFiringCoordinates)
 A_TrayMenu.Add("Pause Monitoring", ToggleMonitoring)
 A_TrayMenu.Add("Return to previous window", ToggleReturnFocus)
 A_TrayMenu.Check("Return to previous window")
@@ -53,10 +62,12 @@ CaptureFiringCoordinates(*) {
 
 CaptureCurrentChatLine(role) {
     global WardogsWindowTitle, RestrictHotkeyToWardogs, HotkeyCaptureActive, LastText, LastHandledAt
+    WriteLog("Hotkey received: " role)
 
     activeTitle := WinGetTitle("A")
     if RestrictHotkeyToWardogs && !InStr(StrUpper(activeTitle), StrUpper(WardogsWindowTitle)) {
         SoundBeep(500, 140)
+        WriteLog("Blocked by window-title restriction. Active: " activeTitle)
         TrayTip("Coordinate shortcut ignored: active title is " activeTitle, "WARDOGS Clipboard Bridge")
         return
     }
@@ -75,14 +86,17 @@ CaptureCurrentChatLine(role) {
     if !ClipWait(1.5) {
         HotkeyCaptureActive := false
         SoundBeep(420, 220)
+        WriteLog("Copy failed: clipboard stayed empty")
         TrayTip("Shortcut worked, but no text was copied. Focus the chat input and keep the caret after the coordinates.", "WARDOGS Clipboard Bridge")
         return
     }
 
     text := Trim(A_Clipboard)
+    WriteLog("Copied text: " text)
     if !LooksLikeCoordinates(text) {
         HotkeyCaptureActive := false
         SoundBeep(420, 220)
+        WriteLog("Coordinate recognition failed")
         TrayTip("Text was copied, but no valid coordinate pair was recognized.", "WARDOGS Clipboard Bridge")
         return
     }
@@ -93,6 +107,7 @@ CaptureCurrentChatLine(role) {
     LastHandledAt := A_TickCount
     SoundBeep(1450, 55)
     SoundBeep(1750, 55)
+    WriteLog("Coordinates recognized; delivering as " role)
     DeliverClipboardToCalculator()
     HotkeyCaptureActive := false
 }
@@ -169,12 +184,14 @@ DeliverClipboardToCalculator() {
         if ReturnFocusEnabled && previousHwnd && previousHwnd != hwnd && WinExist("ahk_id " previousHwnd) {
             Sleep(ReturnFocusDelayMs)
             WinActivate("ahk_id " previousHwnd)
+            WriteLog("Import completed; previous window restored")
             TrayTip("Coordinates imported; previous window restored.", "WARDOGS Clipboard Bridge")
         } else {
             TrayTip("Coordinates imported.", "WARDOGS Clipboard Bridge")
         }
     } catch Error as err {
         MouseMove(oldX, oldY, 0)
+        WriteLog("Automatic paste failed: " err.Message)
         TrayTip("Automatic paste failed: " err.Message, "WARDOGS Clipboard Bridge")
     }
 }

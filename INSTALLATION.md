@@ -48,15 +48,15 @@ Prüfe vor der Verwendung von Fenster- oder Clipboard-Automatisierung die jeweil
 ## Kartenmaterial
 
 Die auswählbaren WARDOGS-Kartenbilder werden zur Laufzeit von `wardogs.zone` geladen und sind nicht im Archiv enthalten. Dadurch werden keine fremden Karten-Assets weiterverteilt. Der Rechner enthält immer ein lokales taktisches Fallback-Raster.
-## F8-Kurzablauf im Spiel
+## F7/F8-Kurzablauf im Spiel
 
 1. Die Funktion **Mark Coordinates** verwenden, sodass die Koordinaten in der Chatzeile stehen.
 2. Sicherstellen, dass die Chatzeile aktiv und der Cursor am Zeilenende ist.
 3. **F8** drücken.
-4. Das Skript sendet `Shift+Pos1`, danach `Strg+C`, importiert und berechnet die Koordinaten und aktiviert anschließend WARDOGS erneut.
+4. Das Skript sendet bei F7 oder F8 `Shift+Pos1`, danach `Strg+C`, importiert und berechnet die Koordinaten und aktiviert anschließend WARDOGS erneut.
 
 Der Hotkey ist für bessere Kompatibilität standardmäßig global aktiv. Optional kann oben im AHK-Skript `RestrictHotkeyToWardogs := true` gesetzt und `WardogsWindowTitle` an den tatsächlichen Fenstertitel angepasst werden.
-### F8-Diagnose
+### F7/F8-Diagnose
 
 - Ein hoher Ton: Das Skript hat F8 empfangen.
 - Zwei höhere Töne: Koordinaten wurden erkannt und an den Rechner übergeben.
@@ -66,6 +66,9 @@ Der Hotkey ist für bessere Kompatibilität standardmäßig global aktiv. Option
 Bei einem hohen und danach tiefen Ton muss die Chat-Eingabe aktiv sein und der Cursor direkt hinter dem Koordinatentext stehen. Reiner Text im nicht editierbaren Chatverlauf kann mit `Shift+Pos1` möglicherweise nicht markiert werden.
 ## Rollenbezogene Kurzbefehle
 
-- **Strg+F8:** aktuelle Koordinaten als Feuerposition übernehmen, Fixed Position aktivieren und speichern.
+- **F7:** aktuelle Koordinaten als Feuerposition übernehmen, Fixed Position aktivieren und speichern.
 - **F8:** aktuelle Koordinaten als Zielposition übernehmen und sofort gegen die gespeicherte Feuerposition berechnen.
 - Danach wird WARDOGS automatisch wieder aktiviert.
+### Diagnose ohne Piepton
+
+Das Skript legt im selben Ordner `wardogs-clipboard-monitor.log` an. Die Datei wird bei jedem Start neu erstellt. Sie zeigt, ob F7/F8 empfangen wurde, welcher Text kopiert wurde und ob Erkennung und Übergabe erfolgreich waren. Fehlt die Logdatei vollständig, läuft das aktualisierte AHK-Skript nicht.
