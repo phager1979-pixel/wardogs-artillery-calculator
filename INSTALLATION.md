@@ -35,7 +35,7 @@ Danach:
 4. Der Rechner wird geöffnet oder fokussiert und übernimmt die Koordinaten.
 5. Bei aktivierter **Fixed Position** wird ein kopiertes X/Y-Paar immer als Ziel verwendet.
 
-Über das Tray-Symbol kann die Überwachung pausiert, fortgesetzt oder beendet werden.
+Nach dem Import wird standardmäßig das zuvor aktive Fenster (zum Beispiel WARDOGS) wieder fokussiert. Über das Tray-Symbol kann **Return to previous window** ein- oder ausgeschaltet werden. Dort kann die Überwachung außerdem pausiert, fortgesetzt oder beendet werden.
 
 ## Sicherheit und Berechtigungen
 

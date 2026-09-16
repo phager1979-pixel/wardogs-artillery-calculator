@@ -13,6 +13,8 @@ WindowTitle := "WARDOGS Artillery Map Calculator"
 LastText := ""
 LastHandledAt := 0
 MonitoringEnabled := true
+ReturnFocusEnabled := true
+ReturnFocusDelayMs := 180
 
 if !FileExist(CalculatorPath) {
     MsgBox("Calculator not found:`n" CalculatorPath, "WARDOGS Clipboard Bridge", "Iconx")
@@ -22,6 +24,8 @@ if !FileExist(CalculatorPath) {
 A_TrayMenu.Delete()
 A_TrayMenu.Add("Open Calculator", OpenCalculator)
 A_TrayMenu.Add("Pause Monitoring", ToggleMonitoring)
+A_TrayMenu.Add("Return to previous window", ToggleReturnFocus)
+A_TrayMenu.Check("Return to previous window")
 A_TrayMenu.Add()
 A_TrayMenu.Add("Exit", (*) => ExitApp())
 A_TrayMenu.Default := "Open Calculator"
@@ -75,7 +79,8 @@ LooksLikeCoordinates(text) {
 }
 
 DeliverClipboardToCalculator() {
-    global WindowTitle
+    global WindowTitle, ReturnFocusEnabled, ReturnFocusDelayMs
+    previousHwnd := WinExist("A")
     hwnd := EnsureCalculatorWindow()
     if !hwnd {
         TrayTip("Calculator window could not be opened.", "WARDOGS Clipboard Bridge")
@@ -98,7 +103,13 @@ DeliverClipboardToCalculator() {
         Send("^v")
         Sleep(80)
         MouseMove(oldX, oldY, 0)
-        TrayTip("Coordinates imported.", "WARDOGS Clipboard Bridge")
+        if ReturnFocusEnabled && previousHwnd && previousHwnd != hwnd && WinExist("ahk_id " previousHwnd) {
+            Sleep(ReturnFocusDelayMs)
+            WinActivate("ahk_id " previousHwnd)
+            TrayTip("Coordinates imported; previous window restored.", "WARDOGS Clipboard Bridge")
+        } else {
+            TrayTip("Coordinates imported.", "WARDOGS Clipboard Bridge")
+        }
     } catch Error as err {
         MouseMove(oldX, oldY, 0)
         TrayTip("Automatic paste failed: " err.Message, "WARDOGS Clipboard Bridge")
@@ -136,4 +147,13 @@ ToggleMonitoring(*) {
     MonitoringEnabled := !MonitoringEnabled
     A_TrayMenu.Rename(MonitoringEnabled ? "Resume Monitoring" : "Pause Monitoring", MonitoringEnabled ? "Pause Monitoring" : "Resume Monitoring")
     TrayTip(MonitoringEnabled ? "Clipboard monitoring active." : "Clipboard monitoring paused.", "WARDOGS Clipboard Bridge")
+}
+ToggleReturnFocus(*) {
+    global ReturnFocusEnabled
+    ReturnFocusEnabled := !ReturnFocusEnabled
+    if ReturnFocusEnabled
+        A_TrayMenu.Check("Return to previous window")
+    else
+        A_TrayMenu.Uncheck("Return to previous window")
+    TrayTip(ReturnFocusEnabled ? "Previous-window focus restoration enabled." : "Calculator will remain in front after import.", "WARDOGS Clipboard Bridge")
 }

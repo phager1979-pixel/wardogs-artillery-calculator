@@ -77,3 +77,8 @@ The tactical map is arranged at full width directly below the three primary solu
 - Zoom range: `100%–800%`.
 - Firing position, target, connecting line, and grid stay aligned with the map while navigating.
 - Changing the selected map resets the view to `100%`.
+## Automatic focus return
+
+The AutoHotkey bridge remembers the active window before importing coordinates. After the calculator receives the paste, the bridge restores that previous window after a short delay, allowing WARDOGS to remain the working foreground application. The behavior is enabled by default and can be toggled through **Return to previous window** in the tray menu.
+
+Exclusive-fullscreen games or mismatched privilege levels can prevent Windows from restoring focus. Borderless-windowed mode is recommended; the game and bridge should run at the same privilege level.
