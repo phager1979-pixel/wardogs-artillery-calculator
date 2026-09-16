@@ -1,0 +1,8 @@
+.hilo/
+images/
+image*.png
+*.zip
+*.tmp
+.DS_Store
+Thumbs.db
+*.log
