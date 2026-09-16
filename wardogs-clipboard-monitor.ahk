@@ -15,7 +15,8 @@ LastHandledAt := 0
 MonitoringEnabled := true
 ReturnFocusEnabled := true
 ReturnFocusDelayMs := 180
-CaptureHotkey := "F8"
+TargetHotkey := "F8"
+FiringHotkey := "^F8"
 WardogsWindowTitle := "WARDOGS"
 RestrictHotkeyToWardogs := false
 HotkeyCaptureActive := false
@@ -27,7 +28,8 @@ if !FileExist(CalculatorPath) {
 
 A_TrayMenu.Delete()
 A_TrayMenu.Add("Open Calculator", OpenCalculator)
-A_TrayMenu.Add("Capture chat coordinates (F8)", CaptureCurrentChatLine)
+A_TrayMenu.Add("Capture target (F8)", CaptureTargetCoordinates)
+A_TrayMenu.Add("Capture firing position (Ctrl+F8)", CaptureFiringCoordinates)
 A_TrayMenu.Add("Pause Monitoring", ToggleMonitoring)
 A_TrayMenu.Add("Return to previous window", ToggleReturnFocus)
 A_TrayMenu.Check("Return to previous window")
@@ -37,26 +39,33 @@ A_TrayMenu.Default := "Open Calculator"
 A_TrayMenu.ClickCount := 1
 
 OnClipboardChange(ClipboardChanged)
-Hotkey(CaptureHotkey, CaptureCurrentChatLine)
+Hotkey(TargetHotkey, CaptureTargetCoordinates)
+Hotkey(FiringHotkey, CaptureFiringCoordinates)
 TrayTip("Copy a WARDOGS X/Y pair to import it automatically.", "WARDOGS Clipboard Bridge")
 
-CaptureCurrentChatLine(*) {
+CaptureTargetCoordinates(*) {
+    CaptureCurrentChatLine("target")
+}
+
+CaptureFiringCoordinates(*) {
+    CaptureCurrentChatLine("firing")
+}
+
+CaptureCurrentChatLine(role) {
     global WardogsWindowTitle, RestrictHotkeyToWardogs, HotkeyCaptureActive, LastText, LastHandledAt
 
     activeTitle := WinGetTitle("A")
     if RestrictHotkeyToWardogs && !InStr(StrUpper(activeTitle), StrUpper(WardogsWindowTitle)) {
         SoundBeep(500, 140)
-        TrayTip("F8 ignored: active title is " activeTitle, "WARDOGS Clipboard Bridge")
+        TrayTip("Coordinate shortcut ignored: active title is " activeTitle, "WARDOGS Clipboard Bridge")
         return
     }
 
-    ; First beep confirms that AutoHotkey received F8.
-    SoundBeep(1100, 70)
+    ; First beep confirms that AutoHotkey received the shortcut.
+    SoundBeep(role = "firing" ? 900 : 1100, 70)
     HotkeyCaptureActive := true
     A_Clipboard := ""
 
-    ; SendEvent with explicit key-down/up events is accepted by more games
-    ; than the default SendInput mode.
     SendEvent("{Shift down}{Home down}")
     Sleep(90)
     SendEvent("{Home up}{Shift up}")
@@ -66,23 +75,26 @@ CaptureCurrentChatLine(*) {
     if !ClipWait(1.5) {
         HotkeyCaptureActive := false
         SoundBeep(420, 220)
-        TrayTip("F8 worked, but no text was copied. Open/focus the chat input and keep the caret after the coordinates.", "WARDOGS Clipboard Bridge")
+        TrayTip("Shortcut worked, but no text was copied. Focus the chat input and keep the caret after the coordinates.", "WARDOGS Clipboard Bridge")
         return
     }
 
     text := Trim(A_Clipboard)
-    HotkeyCaptureActive := false
     if !LooksLikeCoordinates(text) {
+        HotkeyCaptureActive := false
         SoundBeep(420, 220)
         TrayTip("Text was copied, but no valid coordinate pair was recognized.", "WARDOGS Clipboard Bridge")
         return
     }
 
-    LastText := text
+    ; The prefix is consumed by the calculator and forces an unambiguous role.
+    A_Clipboard := (role = "firing" ? "__WARDOGS_FIRING__ " : "__WARDOGS_TARGET__ ") text
+    LastText := A_Clipboard
     LastHandledAt := A_TickCount
     SoundBeep(1450, 55)
     SoundBeep(1750, 55)
     DeliverClipboardToCalculator()
+    HotkeyCaptureActive := false
 }
 
 ClipboardChanged(DataType) {

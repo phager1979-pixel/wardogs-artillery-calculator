@@ -92,7 +92,7 @@ With the WARDOGS chat coordinate line active and the caret at its end, press **F
 4. The calculator computes the solution.
 5. Focus returns automatically to WARDOGS.
 
-The hotkey is global and the window-title restriction is disabled by default for compatibility with varying game-window titles. Advanced users can change `CaptureHotkey`, `WardogsWindowTitle`, or set `RestrictHotkeyToWardogs := true` near the top of `wardogs-clipboard-monitor.ahk`.
+The hotkey is global and the window-title restriction is disabled by default for compatibility with varying game-window titles. Advanced users can change `TargetHotkey`, `FiringHotkey`, `WardogsWindowTitle`, or set `RestrictHotkeyToWardogs := true` near the top of `wardogs-clipboard-monitor.ahk`.
 ### F8 diagnostics
 
 The default window-title restriction is disabled because some WARDOGS builds expose a different title. F8 now uses explicit `SendEvent` key-down/up events and audible diagnostics:
@@ -102,3 +102,10 @@ The default window-title restriction is disabled because some WARDOGS builds exp
 - One low beep: F8 ran, but copying or coordinate recognition failed.
 
 If there is no first beep, the updated AutoHotkey script is not running. Exit the old tray instance and start the new script. If the first beep is followed by a low beep, the WARDOGS chat input must be focused and the caret must be positioned directly after the coordinate text; rendered chat-history text may not be keyboard-selectable.
+## Role-specific coordinate shortcuts
+
+- **Ctrl+F8** selects and copies the current coordinate line as the **firing position**, enables Fixed Position, stores it, and computes with the current target.
+- **F8** selects and copies the current coordinate line as the **target position** and computes against the stored firing position.
+- Both shortcuts restore the previously active WARDOGS window after delivery.
+
+The bridge adds a temporary internal role marker to the clipboard text so the calculator does not have to guess whether a two-number pair is firing or target data.

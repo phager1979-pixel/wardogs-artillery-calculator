@@ -64,3 +64,8 @@ Der Hotkey ist für bessere Kompatibilität standardmäßig global aktiv. Option
 - Kein Ton: Das neue Skript läuft nicht. Die alte Tray-Instanz beenden und die aktualisierte AHK-Datei starten.
 
 Bei einem hohen und danach tiefen Ton muss die Chat-Eingabe aktiv sein und der Cursor direkt hinter dem Koordinatentext stehen. Reiner Text im nicht editierbaren Chatverlauf kann mit `Shift+Pos1` möglicherweise nicht markiert werden.
+## Rollenbezogene Kurzbefehle
+
+- **Strg+F8:** aktuelle Koordinaten als Feuerposition übernehmen, Fixed Position aktivieren und speichern.
+- **F8:** aktuelle Koordinaten als Zielposition übernehmen und sofort gegen die gespeicherte Feuerposition berechnen.
+- Danach wird WARDOGS automatisch wieder aktiviert.
