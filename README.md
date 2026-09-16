@@ -69,3 +69,11 @@ The map imagery requires internet access. If an image is unavailable, the calcul
 ## Enlarged map layout
 
 The tactical map is arranged at full width directly below the three primary solution instruments. Auxiliary deltas and detailed telemetry follow beneath it so the map remains readable across flexible window sizes.
+## V2 zoomable map
+
+- Zoom with the mouse wheel while keeping the cursor position anchored.
+- Drag the map with mouse, pen, or touch to pan.
+- Use `+`, `-`, and **Reset** controls when a wheel is unavailable.
+- Zoom range: `100%–800%`.
+- Firing position, target, connecting line, and grid stay aligned with the map while navigating.
+- Changing the selected map resets the view to `100%`.
