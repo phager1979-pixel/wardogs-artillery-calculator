@@ -55,4 +55,12 @@ Die auswählbaren WARDOGS-Kartenbilder werden zur Laufzeit von `wardogs.zone` ge
 3. **F8** drücken.
 4. Das Skript sendet `Shift+Pos1`, danach `Strg+C`, importiert und berechnet die Koordinaten und aktiviert anschließend WARDOGS erneut.
 
-Der Hotkey wird standardmäßig nur ausgeführt, wenn der Titel des aktiven Fensters `WARDOGS` enthält. Bei abweichendem Fenstertitel kann `WardogsWindowTitle` oben im AHK-Skript angepasst werden.
+Der Hotkey ist für bessere Kompatibilität standardmäßig global aktiv. Optional kann oben im AHK-Skript `RestrictHotkeyToWardogs := true` gesetzt und `WardogsWindowTitle` an den tatsächlichen Fenstertitel angepasst werden.
+### F8-Diagnose
+
+- Ein hoher Ton: Das Skript hat F8 empfangen.
+- Zwei höhere Töne: Koordinaten wurden erkannt und an den Rechner übergeben.
+- Ein tiefer Ton: F8 lief, aber es wurde kein geeigneter Text kopiert oder erkannt.
+- Kein Ton: Das neue Skript läuft nicht. Die alte Tray-Instanz beenden und die aktualisierte AHK-Datei starten.
+
+Bei einem hohen und danach tiefen Ton muss die Chat-Eingabe aktiv sein und der Cursor direkt hinter dem Koordinatentext stehen. Reiner Text im nicht editierbaren Chatverlauf kann mit `Shift+Pos1` möglicherweise nicht markiert werden.

@@ -92,4 +92,13 @@ With the WARDOGS chat coordinate line active and the caret at its end, press **F
 4. The calculator computes the solution.
 5. Focus returns automatically to WARDOGS.
 
-The hotkey is global but, by default, executes only when the active window title contains `WARDOGS`. Advanced users can change `CaptureHotkey`, `WardogsWindowTitle`, or `RestrictHotkeyToWardogs` near the top of `wardogs-clipboard-monitor.ahk`.
+The hotkey is global and the window-title restriction is disabled by default for compatibility with varying game-window titles. Advanced users can change `CaptureHotkey`, `WardogsWindowTitle`, or set `RestrictHotkeyToWardogs := true` near the top of `wardogs-clipboard-monitor.ahk`.
+### F8 diagnostics
+
+The default window-title restriction is disabled because some WARDOGS builds expose a different title. F8 now uses explicit `SendEvent` key-down/up events and audible diagnostics:
+
+- One high beep: the bridge received F8.
+- Two higher beeps: coordinate text was recognized and delivery started.
+- One low beep: F8 ran, but copying or coordinate recognition failed.
+
+If there is no first beep, the updated AutoHotkey script is not running. Exit the old tray instance and start the new script. If the first beep is followed by a low beep, the WARDOGS chat input must be focused and the caret must be positioned directly after the coordinate text; rendered chat-history text may not be keyboard-selectable.

@@ -17,7 +17,8 @@ ReturnFocusEnabled := true
 ReturnFocusDelayMs := 180
 CaptureHotkey := "F8"
 WardogsWindowTitle := "WARDOGS"
-RestrictHotkeyToWardogs := true
+RestrictHotkeyToWardogs := false
+HotkeyCaptureActive := false
 
 if !FileExist(CalculatorPath) {
     MsgBox("Calculator not found:`n" CalculatorPath, "WARDOGS Clipboard Bridge", "Iconx")
@@ -40,28 +41,53 @@ Hotkey(CaptureHotkey, CaptureCurrentChatLine)
 TrayTip("Copy a WARDOGS X/Y pair to import it automatically.", "WARDOGS Clipboard Bridge")
 
 CaptureCurrentChatLine(*) {
-    global WardogsWindowTitle, RestrictHotkeyToWardogs
+    global WardogsWindowTitle, RestrictHotkeyToWardogs, HotkeyCaptureActive, LastText, LastHandledAt
 
     activeTitle := WinGetTitle("A")
     if RestrictHotkeyToWardogs && !InStr(StrUpper(activeTitle), StrUpper(WardogsWindowTitle)) {
-        TrayTip("F8 ignored: WARDOGS is not the active window.", "WARDOGS Clipboard Bridge")
+        SoundBeep(500, 140)
+        TrayTip("F8 ignored: active title is " activeTitle, "WARDOGS Clipboard Bridge")
         return
     }
 
-    ; Assumes the WARDOGS chat input is active and the caret is at the end
-    ; of the coordinate line created by Mark Coordinates.
-    Send("+{Home}")
-    Sleep(70)
+    ; First beep confirms that AutoHotkey received F8.
+    SoundBeep(1100, 70)
+    HotkeyCaptureActive := true
     A_Clipboard := ""
-    Send("^c")
 
-    if !ClipWait(1)
-        TrayTip("No chat coordinates were copied. Focus the coordinate line and try F8 again.", "WARDOGS Clipboard Bridge")
+    ; SendEvent with explicit key-down/up events is accepted by more games
+    ; than the default SendInput mode.
+    SendEvent("{Shift down}{Home down}")
+    Sleep(90)
+    SendEvent("{Home up}{Shift up}")
+    Sleep(100)
+    SendEvent("{Ctrl down}c{Ctrl up}")
+
+    if !ClipWait(1.5) {
+        HotkeyCaptureActive := false
+        SoundBeep(420, 220)
+        TrayTip("F8 worked, but no text was copied. Open/focus the chat input and keep the caret after the coordinates.", "WARDOGS Clipboard Bridge")
+        return
+    }
+
+    text := Trim(A_Clipboard)
+    HotkeyCaptureActive := false
+    if !LooksLikeCoordinates(text) {
+        SoundBeep(420, 220)
+        TrayTip("Text was copied, but no valid coordinate pair was recognized.", "WARDOGS Clipboard Bridge")
+        return
+    }
+
+    LastText := text
+    LastHandledAt := A_TickCount
+    SoundBeep(1450, 55)
+    SoundBeep(1750, 55)
+    DeliverClipboardToCalculator()
 }
 
 ClipboardChanged(DataType) {
-    global MonitoringEnabled, LastText, LastHandledAt
-    if !MonitoringEnabled || DataType != 1
+    global MonitoringEnabled, LastText, LastHandledAt, HotkeyCaptureActive
+    if !MonitoringEnabled || HotkeyCaptureActive || DataType != 1
         return
 
     text := Trim(A_Clipboard)
